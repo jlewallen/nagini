@@ -15,7 +15,6 @@ import voldemort.client.StoreClientFactory;
 import voldemort.serialization.SerializerDefinition;
 import voldemort.versioning.Versioned;
 
-import com.page5of4.nagini.VoldemortClusterBuilder.VoldemortCluster;
 
 public class VoldemortSpecs {
    private static final Logger logger = LoggerFactory.getLogger(VoldemortSpecs.class);

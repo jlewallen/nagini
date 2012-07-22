@@ -23,7 +23,6 @@ import voldemort.routing.RoutingStrategyType;
 import voldemort.serialization.SerializerDefinition;
 import voldemort.server.RequestRoutingType;
 import voldemort.server.VoldemortConfig;
-import voldemort.server.VoldemortServer;
 import voldemort.store.Store;
 import voldemort.store.StoreDefinition;
 import voldemort.store.StoreDefinitionBuilder;
@@ -32,14 +31,12 @@ import voldemort.store.memory.InMemoryStorageConfiguration;
 import voldemort.store.metadata.MetadataStore;
 import voldemort.store.slop.strategy.HintedHandoffStrategyType;
 import voldemort.store.socket.SocketStoreFactory;
-import voldemort.store.socket.clientrequest.ClientRequestExecutorPool;
 import voldemort.utils.ByteArray;
 import voldemort.utils.Props;
 import voldemort.xml.ClusterMapper;
 import voldemort.xml.StoreDefinitionsMapper;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 public class VoldemortClusterBuilder {
    private static final Logger logger = LoggerFactory.getLogger(VoldemortClusterBuilder.class);
@@ -116,55 +113,7 @@ public class VoldemortClusterBuilder {
       return new VoldemortCluster(home, cluster, stores).start();
    }
 
-   public static class VoldemortCluster {
-      private static final Logger logger = LoggerFactory.getLogger(VoldemortCluster.class);
-      private final SocketStoreFactory socketStoreFactory = new ClientRequestExecutorPool(2, 10000, 100000, 32 * 1024);
-      private final Cluster cluster;
-      private final List<StoreDefinition> stores;
-      private final List<VoldemortServer> servers = Lists.newArrayList();
-      private final File home;
-
-      public VoldemortCluster(File home, Cluster cluster, List<StoreDefinition> stores) {
-         super();
-         this.home = home;
-         this.cluster = cluster;
-         this.stores = stores;
-      }
-
-      public VoldemortCluster start() {
-         try {
-            for(int i = 0; i < cluster.getNumberOfNodes(); ++i) {
-               VoldemortConfig config = Helpers.createServerConfigWithDefs(true, i, home.getAbsolutePath(), cluster, stores, new Properties());
-               new File(config.getMetadataDirectory()).mkdir();
-               VoldemortServer server = new VoldemortServer(config);
-               server.start();
-               Helpers.waitForServerStart(socketStoreFactory, server.getIdentityNode());
-               servers.add(server);
-            }
-            return this;
-         }
-         catch(IOException e) {
-            throw new RuntimeException(e);
-         }
-      }
-
-      public void stop() {
-         for(VoldemortServer server : servers) {
-            try {
-               server.stop();
-            }
-            catch(Exception e) {
-               logger.error("Error stopping Server", e);
-            }
-         }
-      }
-
-      public String getBootstrapUrl() {
-         return String.format("tcp://127.0.0.1:%d", cluster.getNodeById(0).getSocketPort());
-      }
-   }
-
-   public static class Helpers {
+   static class Helpers {
       private static final Logger logger = LoggerFactory.getLogger(VoldemortClusterBuilder.class);
 
       public static int[] findFreePorts(int n) {
