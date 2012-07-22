@@ -10,7 +10,7 @@
 
 	<groupId>com.page5of4.nagini</groupId>
 	<artifactId>nagini</artifactId>
-	<packaging>jar</packaging>
+	<packaging>bundle</packaging>
 	<version>1.0.0-SNAPSHOT</version>
 
 	<name>Page5of4 :: Nagini</name>
@@ -149,6 +149,42 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>2.3.7</version>
+				<extensions>true</extensions>
+				<executions>
+					<execution>
+						<id>bundle-manifest</id>
+						<phase>process-classes</phase>
+						<goals>
+							<goal>manifest</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<supportedProjectTypes>
+						<supportedProjectType>jar</supportedProjectType>
+						<supportedProjectType>bundle</supportedProjectType>
+					</supportedProjectTypes>
+					<unpackBundle>true</unpackBundle>
+					<instructions>
+						<Export-Package>
+							com.page5of4.nagini.*,
+						</Export-Package>
+						<Import-Package>
+							*
+						</Import-Package>
+						<Embed-Dependency>jmustache</Embed-Dependency>
+					</instructions>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 	<distributionManagement>
 		<repository>
