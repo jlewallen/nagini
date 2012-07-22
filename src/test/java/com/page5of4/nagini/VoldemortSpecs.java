@@ -15,6 +15,7 @@ import voldemort.client.StoreClientFactory;
 import voldemort.serialization.SerializerDefinition;
 import voldemort.versioning.Versioned;
 
+import com.google.gson.Gson;
 
 public class VoldemortSpecs {
    private static final Logger logger = LoggerFactory.getLogger(VoldemortSpecs.class);
@@ -34,7 +35,7 @@ public class VoldemortSpecs {
 
       for(short i = 0; i < 10; ++i) {
          Versioned<User> version = client.get(user.getId(), new Versioned<User>(null));
-         logger.info("Got: " + version.getValue());
+         logger.info(String.format("Got: %s %s %s", version.getVersion(), version.getValue(), new Gson().toJson(version.getValue())));
          version.setObject(user);
          client.put(user.getId(), version);
       }

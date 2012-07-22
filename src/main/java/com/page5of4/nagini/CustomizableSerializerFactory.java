@@ -1,5 +1,9 @@
 package com.page5of4.nagini;
 
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.Map;
+
 import voldemort.serialization.DefaultSerializerFactory;
 import voldemort.serialization.Serializer;
 import voldemort.serialization.SerializerDefinition;
@@ -10,20 +14,43 @@ import com.page5of4.nagini.serializers.JacksonSerializer;
 import com.page5of4.nagini.serializers.UUIDSerializer;
 
 public class CustomizableSerializerFactory implements SerializerFactory {
+   private static final String GSON_SERIALIER_TYPE_NAME = "gson";
+   private static final String JACKSON_SERIALIER_TYPE_NAME = "jackson";
+   private static final String UUID_SERIALIER_TYPE_NAME = "uuid";
+
    private final DefaultSerializerFactory defaultSerializerFactory = new DefaultSerializerFactory();
+   private final Map<String, Class<? extends Serializer<?>>> map = new HashMap<String, Class<? extends Serializer<?>>>();
+
+   public CustomizableSerializerFactory() {
+      super();
+      add(UUID_SERIALIER_TYPE_NAME, UUIDSerializer.class);
+      add(GSON_SERIALIER_TYPE_NAME, GsonSerializer.class);
+      add(JACKSON_SERIALIER_TYPE_NAME, JacksonSerializer.class);
+   }
+
+   public void add(String name, Class<? extends Serializer<?>> klass) {
+      map.put(name, klass);
+   }
 
    @Override
    public Serializer<?> getSerializer(SerializerDefinition serializerDef) {
       String name = serializerDef.getName();
-      if(name.equals("uuid")) {
-         return new UUIDSerializer();
+      if(!map.containsKey(name)) {
+         return defaultSerializerFactory.getSerializer(serializerDef);
       }
-      else if(name.equals("jackson")) {
-         return new JacksonSerializer(serializerDef.getCurrentSchemaInfo());
+      try {
+         Class<?> klass = map.get(name);
+         if(serializerDef.hasSchemaInfo()) {
+            Constructor<?> ctor = klass.getConstructor(String.class);
+            return (Serializer<?>)ctor.newInstance(serializerDef.getCurrentSchemaInfo());
+         }
+         else {
+            Constructor<?> ctor = klass.getConstructor();
+            return (Serializer<?>)ctor.newInstance();
+         }
       }
-      else if(name.equals("gson")) {
-         return new GsonSerializer(serializerDef.getCurrentSchemaInfo());
+      catch(Exception e) {
+         throw new RuntimeException(e);
       }
-      return defaultSerializerFactory.getSerializer(serializerDef);
    }
 }
