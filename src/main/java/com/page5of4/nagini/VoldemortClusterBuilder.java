@@ -5,10 +5,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +42,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class VoldemortClusterBuilder {
+   private static final Logger logger = LoggerFactory.getLogger(VoldemortClusterBuilder.class);
    private final File home;
    private final List<StoreDefinition> stores = new ArrayList<StoreDefinition>();
    private Cluster cluster;
@@ -54,12 +58,7 @@ public class VoldemortClusterBuilder {
    }
 
    public VoldemortClusterBuilder numberOfNodes(int nodes) {
-      if(nodes != 2) {
-         cluster = Helpers.getLocalCluster(nodes);
-      }
-      else {
-         cluster = Helpers.getLocalCluster(2, new int[][] { { 0, 2, 4, 6 }, { 1, 3, 5, 7 } });
-      }
+      cluster = Helpers.getLocalCluster(nodes, 4);
       return this;
    }
 
@@ -166,6 +165,8 @@ public class VoldemortClusterBuilder {
    }
 
    public static class Helpers {
+      private static final Logger logger = LoggerFactory.getLogger(VoldemortClusterBuilder.class);
+
       public static int[] findFreePorts(int n) {
          int[] ports = new int[n];
          ServerSocket[] sockets = new ServerSocket[n];
@@ -211,8 +212,31 @@ public class VoldemortClusterBuilder {
             }
 
             nodes.add(new Node(i, "127.0.0.1", ports[3 * i], ports[3 * i + 1], ports[3 * i + 2], partitions));
+            logger.info(String.format("Cluster: Node(%d) Partitions(%s)", i, StringUtils.join(partitions, " ")));
          }
 
+         return new Cluster("test-cluster", nodes);
+      }
+
+      public static Cluster getLocalCluster(int numberOfNodes, int partitionsPerNode) {
+         int[] ports = findFreePorts(3 * numberOfNodes);
+
+         List<Integer> ids = new ArrayList<Integer>();
+         for(int i = 0; i < numberOfNodes * partitionsPerNode; ++i) {
+            ids.add(i);
+         }
+         Collections.shuffle(ids, new Random(92873498274L));
+
+         List<Node> nodes = new ArrayList<Node>();
+         for(int i = 0; i < numberOfNodes; ++i) {
+            List<Integer> partitions = new ArrayList<Integer>();
+            for(int j = 0; j < partitionsPerNode; ++j) {
+               partitions.add(ids.get(i * partitionsPerNode + j));
+            }
+            Collections.sort(partitions);
+            nodes.add(new Node(i, "127.0.0.1", ports[3 * i], ports[3 * i + 1], ports[3 * i + 2], partitions));
+            logger.info(String.format("Cluster: Node(%d) Partitions(%s)", i, StringUtils.join(partitions, " ")));
+         }
          return new Cluster("test-cluster", nodes);
       }
 
