@@ -1,5 +1,7 @@
 package com.page5of4.nagini;
 
+import java.util.Map;
+
 import voldemort.serialization.DefaultSerializerFactory;
 import voldemort.serialization.SerializerFactory;
 
@@ -28,6 +30,11 @@ public class SerializerFactories {
 
       public SerializerFactoryChainBuilder mapSchema(String key, Class<?> to) {
          mappingFactory.addSchemaMapping(key, to);
+         return this;
+      }
+
+      public SerializerFactoryChainBuilder mapSchema(Map<String, String> mapping) {
+         mappingFactory.addSchemaMappings(mapping);
          return this;
       }
 

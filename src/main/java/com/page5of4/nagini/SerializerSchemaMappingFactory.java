@@ -25,6 +25,10 @@ public class SerializerSchemaMappingFactory implements SerializerFactory {
       addSchemaMapping(key, value.getName());
    }
 
+   public void addSchemaMappings(Map<String, String> mapping) {
+      map.putAll(mapping);
+   }
+
    public String findSchemaFor(String schema) {
       if(map.containsKey(schema)) {
          return map.get(schema);
