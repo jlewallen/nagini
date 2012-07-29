@@ -30,7 +30,7 @@ public class VoldemortSpecs {
       User user = new User(UUID.randomUUID(), "Jacob", "Lewallen", new Date());
 
       String bootstrapUrl = cluster.getBootstrapUrl();
-      StoreClientFactory factory = new SocketStoreClientFactory(new ClientConfig().setSerializerFactory(new CustomizableSerializerFactory()).setBootstrapUrls(bootstrapUrl));
+      StoreClientFactory factory = new SocketStoreClientFactory(new ClientConfig().setSerializerFactory(SerializerFactories.defaultChain()).setBootstrapUrls(bootstrapUrl));
       StoreClient<UUID, User> client = factory.getStoreClient("junk");
 
       for(short i = 0; i < 10; ++i) {

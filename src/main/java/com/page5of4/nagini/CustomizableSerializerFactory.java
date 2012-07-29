@@ -4,7 +4,6 @@ import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 
-import voldemort.serialization.DefaultSerializerFactory;
 import voldemort.serialization.Serializer;
 import voldemort.serialization.SerializerDefinition;
 import voldemort.serialization.SerializerFactory;
@@ -18,14 +17,15 @@ public class CustomizableSerializerFactory implements SerializerFactory {
    private static final String JACKSON_SERIALIER_TYPE_NAME = "jackson";
    private static final String UUID_SERIALIER_TYPE_NAME = "uuid";
 
-   private final DefaultSerializerFactory defaultSerializerFactory = new DefaultSerializerFactory();
+   private final SerializerFactory chainedFactory;
    private final Map<String, Class<? extends Serializer<?>>> map = new HashMap<String, Class<? extends Serializer<?>>>();
 
-   public CustomizableSerializerFactory() {
+   public CustomizableSerializerFactory(SerializerFactory chainedFactory) {
       super();
-      add(UUID_SERIALIER_TYPE_NAME, UUIDSerializer.class);
-      add(GSON_SERIALIER_TYPE_NAME, GsonSerializer.class);
-      add(JACKSON_SERIALIER_TYPE_NAME, JacksonSerializer.class);
+      this.add(UUID_SERIALIER_TYPE_NAME, UUIDSerializer.class);
+      this.add(GSON_SERIALIER_TYPE_NAME, GsonSerializer.class);
+      this.add(JACKSON_SERIALIER_TYPE_NAME, JacksonSerializer.class);
+      this.chainedFactory = chainedFactory;
    }
 
    public void add(String name, Class<? extends Serializer<?>> klass) {
@@ -36,7 +36,7 @@ public class CustomizableSerializerFactory implements SerializerFactory {
    public Serializer<?> getSerializer(SerializerDefinition serializerDef) {
       String name = serializerDef.getName();
       if(!map.containsKey(name)) {
-         return defaultSerializerFactory.getSerializer(serializerDef);
+         return chainedFactory.getSerializer(serializerDef);
       }
       try {
          Class<?> klass = map.get(name);
