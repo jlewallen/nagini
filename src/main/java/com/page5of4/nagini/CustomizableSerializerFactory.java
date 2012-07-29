@@ -40,13 +40,18 @@ public class CustomizableSerializerFactory implements SerializerFactory {
       }
       try {
          Class<?> klass = map.get(name);
-         if(serializerDef.hasSchemaInfo()) {
-            Constructor<?> ctor = klass.getConstructor(String.class);
-            return (Serializer<?>)ctor.newInstance(serializerDef.getCurrentSchemaInfo());
+         try {
+            if(serializerDef.hasSchemaInfo()) {
+               Constructor<?> ctor = klass.getConstructor(String.class);
+               return (Serializer<?>)ctor.newInstance(serializerDef.getCurrentSchemaInfo());
+            }
+            else {
+               Constructor<?> ctor = klass.getConstructor();
+               return (Serializer<?>)ctor.newInstance();
+            }
          }
-         else {
-            Constructor<?> ctor = klass.getConstructor();
-            return (Serializer<?>)ctor.newInstance();
+         catch(Throwable e) {
+            throw new RuntimeException("Error creating Serializer: " + klass.getName(), e);
          }
       }
       catch(Exception e) {
