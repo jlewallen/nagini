@@ -182,6 +182,7 @@
 							com.page5of4.nagini.*
 						</Export-Package>
 						<Import-Package>
+							com.google.gson.*;resolution:=optional,
 							*
 						</Import-Package>
 						<Embed-Dependency>jmustache</Embed-Dependency>
